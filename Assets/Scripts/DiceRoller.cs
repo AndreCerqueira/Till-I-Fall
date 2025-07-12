@@ -55,15 +55,17 @@ public class DiceRoller : MonoBehaviour
         isRolling = true;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-        
-        // Normaliza o vetor direção
+    
+        // Obtém a direção do pointer em coordenadas do mundo (não relativas ao dado)
         Vector2 direction2D = pointer.GetDirection();
-        Vector3 direction = new Vector3(direction2D.x, 1f, direction2D.y).normalized;
+    
+        // Converte para coordenadas do mundo - SEMPRE usa os eixos do mundo, não do dado
+        Vector3 worldDirection = new Vector3(direction2D.x, 1f, direction2D.y).normalized;
+    
+        // Aplica força na direção mundial (não local)
+        rb.AddForce(worldDirection * throwForce, ForceMode.Impulse);
 
-        // Aplica força na direção desejada
-        rb.AddForce(direction * throwForce, ForceMode.Impulse);
-
-        // Torque baseado em direção + intensidade
+        // Torque aleatório para fazer o dado rolar
         Vector3 torque = new Vector3(
             Random.Range(-1f, 1f),
             Random.Range(-1f, 1f),
@@ -71,7 +73,7 @@ public class DiceRoller : MonoBehaviour
         ) * torqueAmount * torqueMultiplier;
 
         rb.AddTorque(torque, ForceMode.Impulse);
-        
+    
         _onRollFeedback?.PlayFeedbacks();
 
         StartCoroutine(WaitForDiceToSettle());
@@ -97,22 +99,8 @@ public class DiceRoller : MonoBehaviour
         // Espera até o dado parar de se mover
         yield return new WaitForSeconds(1.5f);
         
-        /*
-        if (hasFallen) 
-        {
-            Debug.Log("Dado caiu no abismo durante a rolagem!");
-            yield break; // Sai se o dado já tiver caído
-        }*/
-
         while (rb.linearVelocity.magnitude > settleThreshold || rb.angularVelocity.magnitude > settleThreshold)
             yield return null;
-        
-        /*
-        if (hasFallen) 
-        {
-            Debug.Log("Dado caiu no abismo durante a rolagem!");
-            yield break; // Sai se o dado já tiver caído
-        }*/
         
         int result = GetTopNumber();
         Debug.Log("Número obtido result: " + result);

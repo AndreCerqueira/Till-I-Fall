@@ -10,6 +10,7 @@ public class DiceRoller : MonoBehaviour
     [SerializeField] private float throwForce = 5f;
     [SerializeField] private float settleThreshold = 0.1f;
     [SerializeField] private DirectionalPointer pointer;
+    [SerializeField] private ParticleSystem particleSystemPrefab;
 
     private bool isRolling = false;
     
@@ -26,7 +27,7 @@ public class DiceRoller : MonoBehaviour
         {
             hasFallen = true;
             Debug.Log("Dado caiu no abismo!");
-            StopCoroutine(WaitForDiceToSettle());
+            //StopCoroutine(WaitForDiceToSettle());
             boardView.StartBoardDestruction(); // Chama o método no BoardView
             StartCoroutine(RespawnDiceCoroutine());
         }
@@ -76,25 +77,42 @@ public class DiceRoller : MonoBehaviour
         StartCoroutine(WaitForDiceToSettle());
     }
 
+    public void PlayParticles()
+    {
+        // play particleSystem
+        if (particleSystemPrefab != null)
+        {
+            // rotation need to be -90 on x
+            Quaternion rotation = Quaternion.Euler(-90f, 0f, 0f);
+            // position add 0.01 on y
+            Vector3 position = transform.position + new Vector3(0f, 0.01f, 0f);
+            ParticleSystem particleSystem = Instantiate(particleSystemPrefab, position, rotation);
+            particleSystem.Play();
+            Destroy(particleSystem.gameObject, particleSystem.main.duration);
+        }
+    }
+
     private IEnumerator WaitForDiceToSettle()
     {
         // Espera até o dado parar de se mover
         yield return new WaitForSeconds(1.5f);
         
+        /*
         if (hasFallen) 
         {
             Debug.Log("Dado caiu no abismo durante a rolagem!");
             yield break; // Sai se o dado já tiver caído
-        }
+        }*/
 
         while (rb.linearVelocity.magnitude > settleThreshold || rb.angularVelocity.magnitude > settleThreshold)
             yield return null;
         
+        /*
         if (hasFallen) 
         {
             Debug.Log("Dado caiu no abismo durante a rolagem!");
             yield break; // Sai se o dado já tiver caído
-        }
+        }*/
         
         int result = GetTopNumber();
         Debug.Log("Número obtido result: " + result);

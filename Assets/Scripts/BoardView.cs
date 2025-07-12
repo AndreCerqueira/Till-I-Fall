@@ -20,6 +20,8 @@ public class BoardView : MonoBehaviour
     [SerializeField] private float boundaryHeight = 2f;
 
     [SerializeField] private MMF_Player _onAreaEnterFeedback;
+    [SerializeField] private MMF_Player _onAreaDropFeedback;
+    [SerializeField] private MMF_Player _onAreaSpawnFeedback;
     
     private void Start()
     {
@@ -64,6 +66,7 @@ public class BoardView : MonoBehaviour
             areaView.Setup(tileIndex, _onAreaEnterFeedback);
             _areaViews.Add(areaView);
             AnimateArea(areaView.gameObject);
+            _onAreaSpawnFeedback?.PlayFeedbacks();
 
             yield return new WaitForSeconds(delayBetweenCells);
         }
@@ -107,6 +110,7 @@ public class BoardView : MonoBehaviour
     {
         float fallDuration = 0.6f;
 
+        _onAreaDropFeedback?.PlayFeedbacks();
         area.transform.DOScale(Vector3.zero, fallDuration).SetEase(Ease.InBack);
         area.transform.DOMoveY(area.transform.position.y - 2f, fallDuration).SetEase(Ease.InQuad);
 
@@ -241,6 +245,7 @@ public class BoardView : MonoBehaviour
             _areaViews.Remove(area);
 
             area.AnimateFallAndDestroy(); // método que anima e destrói
+            _onAreaDropFeedback?.PlayFeedbacks();
             yield return new WaitForSeconds(delay);
         }
         
@@ -290,6 +295,7 @@ public class BoardView : MonoBehaviour
             newArea.Setup(tileIndex, _onAreaEnterFeedback);
             _areaViews.Add(newArea);
             AnimateArea(newArea.gameObject);
+            _onAreaSpawnFeedback?.PlayFeedbacks();
         }
 
         // Muda o especial para outro

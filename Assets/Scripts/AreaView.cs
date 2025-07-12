@@ -62,6 +62,8 @@ public class AreaView : MonoBehaviour
                 {
                     FindObjectOfType<BoardView>().HandleSpecialAreaTouched(this);
                 }
+
+                collision.gameObject.GetComponent<DiceRoller>().PlayParticles();
             }
         }
 }

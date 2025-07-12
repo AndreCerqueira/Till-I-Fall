@@ -26,6 +26,7 @@ public class DiceRoller : MonoBehaviour
         {
             hasFallen = true;
             Debug.Log("Dado caiu no abismo!");
+            StopCoroutine(WaitForDiceToSettle());
             boardView.StartBoardDestruction(); // Chama o método no BoardView
             StartCoroutine(RespawnDiceCoroutine());
         }
@@ -40,6 +41,7 @@ public class DiceRoller : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         hasFallen = false;
+        isRolling = false;
         this.GetComponent<TrailRenderer>().enabled = true;
         
         ScoreManager.Instance.ResetScore();
@@ -78,12 +80,24 @@ public class DiceRoller : MonoBehaviour
     {
         // Espera até o dado parar de se mover
         yield return new WaitForSeconds(1.5f);
+        
+        if (hasFallen) 
+        {
+            Debug.Log("Dado caiu no abismo durante a rolagem!");
+            yield break; // Sai se o dado já tiver caído
+        }
 
         while (rb.linearVelocity.magnitude > settleThreshold || rb.angularVelocity.magnitude > settleThreshold)
             yield return null;
-
+        
+        if (hasFallen) 
+        {
+            Debug.Log("Dado caiu no abismo durante a rolagem!");
+            yield break; // Sai se o dado já tiver caído
+        }
+        
         int result = GetTopNumber();
-        Debug.Log("Número obtido: " + result);
+        Debug.Log("Número obtido result: " + result);
         boardView.RemoveAreasExceptAroundDice(transform.position, result);
         ScoreManager.Instance.AddScore(result);
 

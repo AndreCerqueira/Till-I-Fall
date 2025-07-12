@@ -83,6 +83,11 @@ public class BoardView : MonoBehaviour
                 protectedAreas.Add(area);
             }
         }
+        
+        if (_specialArea != null && !protectedAreas.Contains(_specialArea))
+        {
+            protectedAreas.Add(_specialArea);
+        }
 
         var candidates = new List<AreaView>(_areaViews);
         candidates.RemoveAll(a => protectedAreas.Contains(a));
@@ -107,7 +112,13 @@ public class BoardView : MonoBehaviour
 
         yield return new WaitForSeconds(fallDuration);
 
-        Destroy(area.gameObject);
+        try
+        {
+            Destroy(area.gameObject);
+        }
+        catch
+        {
+        }
     }
 
     private static void AnimateArea(GameObject go)
@@ -246,20 +257,53 @@ public class BoardView : MonoBehaviour
     public void HandleSpecialAreaTouched(AreaView touchedArea)
     {
         if (_specialArea == null || touchedArea != _specialArea) return;
-    
-        // Volta ao estado original
-        Vector3 pos = _specialArea.transform.position;
-        int x = Mathf.RoundToInt(pos.x + (width - 1) / 2f);
-        int y = Mathf.RoundToInt(pos.z + (height - 1) / 2f);
-        int newIndex = (x + y) % 2 == 0 ? 0 : 1;
-        _specialArea.SetTile(newIndex);
-    
-        // Escolher nova área
+
+        // Reconstroi áreas que desapareceram
+        var allPositions = GenerateAllPositions();
+        float cellSizeWithSpacing = 1f + spacing;
+        float offsetX = (width - 1) * cellSizeWithSpacing / 2f;
+        float offsetZ = (height - 1) * cellSizeWithSpacing / 2f;
+
+        HashSet<Vector2Int> existingPositions = new();
+
+        foreach (var area in _areaViews)
+        {
+            Vector3 pos = area.transform.position;
+            int x = Mathf.RoundToInt(pos.x + offsetX);
+            int y = Mathf.RoundToInt(pos.z + offsetZ);
+            existingPositions.Add(new Vector2Int(x, y));
+        }
+
+        foreach (var pos in allPositions)
+        {
+            if (existingPositions.Contains(pos)) continue;
+
+            Vector3 worldPos = new Vector3(
+                pos.x * cellSizeWithSpacing - offsetX,
+                0,
+                pos.y * cellSizeWithSpacing - offsetZ
+            );
+
+            var newArea = Instantiate(areaViewPrefab, worldPos, Quaternion.identity, transform);
+            newArea.name = $"Area_{pos.x}_{pos.y}";
+            int tileIndex = (pos.x + pos.y) % 2 == 0 ? 0 : 1;
+            newArea.Setup(tileIndex, _onAreaEnterFeedback);
+            _areaViews.Add(newArea);
+            AnimateArea(newArea.gameObject);
+        }
+
+        // Muda o especial para outro
+        Vector3 specialPos = _specialArea.transform.position;
+        int specialX = Mathf.RoundToInt(specialPos.x + offsetX);
+        int specialY = Mathf.RoundToInt(specialPos.z + offsetZ);
+        int normalTileIndex = (specialX + specialY) % 2 == 0 ? 0 : 1;
+        _specialArea.SetTile(normalTileIndex);
+
         var candidates = new List<AreaView>(_areaViews);
-        candidates.Remove(_specialArea); // evitar mesma área
+        candidates.Remove(_specialArea);
+
         AreaView newSpecial = candidates[Random.Range(0, candidates.Count)];
         newSpecial.SetTile(2);
-    
         _specialArea = newSpecial;
     }
 }

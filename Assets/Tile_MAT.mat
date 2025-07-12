@@ -97,7 +97,7 @@ Material:
     - _TileCount: 15
     - _TileHeight: 81
     - _TileIndex: 0
-    - _TileQuantity: 2
+    - _TileQuantity: 3
     - _TileSelected: 0
     - _TileWidth: 81
     - _UVSec: 0

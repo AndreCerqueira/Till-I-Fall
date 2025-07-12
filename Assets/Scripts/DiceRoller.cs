@@ -9,12 +9,11 @@ public class DiceRoller : MonoBehaviour
     [SerializeField] private float torqueAmount = 10f;
     [SerializeField] private float throwForce = 5f;
     [SerializeField] private float settleThreshold = 0.1f;
+    [SerializeField] private DirectionalPointer pointer;
 
     private bool isRolling = false;
     
     [Header("Input Direction Settings")]
-    public float directionX = 0f; // de -1 a 1
-    public float directionZ = 1f; // de -1 a 1
     public float torqueMultiplier = 1f; // de 0 a 1
 
     private bool hasFallen = false;
@@ -55,7 +54,8 @@ public class DiceRoller : MonoBehaviour
         rb.angularVelocity = Vector3.zero;
         
         // Normaliza o vetor direção
-        Vector3 direction = new Vector3(directionX, 1f, directionZ).normalized;
+        Vector2 direction2D = pointer.GetDirection();
+        Vector3 direction = new Vector3(direction2D.x, 1f, direction2D.y).normalized;
 
         // Aplica força na direção desejada
         rb.AddForce(direction * throwForce, ForceMode.Impulse);

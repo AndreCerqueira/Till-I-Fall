@@ -13,6 +13,7 @@ public class BoardView : MonoBehaviour
     [SerializeField] private float delayBetweenCells = 0.025f;
 
     private List<AreaView> _areaViews = new();
+    private AreaView _specialArea;
     
     [SerializeField] private GameObject boundaryPrefab;
     [SerializeField] private float boundaryThickness = 1f;
@@ -39,6 +40,8 @@ public class BoardView : MonoBehaviour
         float offsetX = (width - 1) * cellSizeWithSpacing / 2f;
         float offsetZ = (height - 1) * cellSizeWithSpacing / 2f;
 
+        Vector2Int specialPos = spiralPositions[Random.Range(0, spiralPositions.Count)];
+
         foreach (var pos in spiralPositions)
         {
             Vector3 worldPos = new Vector3(
@@ -49,10 +52,16 @@ public class BoardView : MonoBehaviour
 
             var areaView = Instantiate(areaViewPrefab, worldPos, Quaternion.identity, transform);
             areaView.name = $"Area_{pos.x}_{pos.y}";
-            
-            int value = (pos.x + pos.y) % 2 == 0 ? 0 : 1;
-            areaView.Setup(value, _onAreaEnterFeedback);
-            
+
+            var tileIndex = (pos.x + pos.y) % 2 == 0 ? 0 : 1;
+
+            if (pos == specialPos)
+            {
+                tileIndex = 2;
+                _specialArea = areaView;
+            }
+
+            areaView.Setup(tileIndex, _onAreaEnterFeedback);
             _areaViews.Add(areaView);
             AnimateArea(areaView.gameObject);
 
@@ -211,11 +220,8 @@ public class BoardView : MonoBehaviour
     {
         float delay = 0.01f;
 
-        // Copia da lista para evitar modificar enquanto iteramos
         var areasToDestroy = new List<AreaView>(_areaViews);
     
-        // Ordem aleatória ou espiral?
-        // Aqui usaremos ordem aleatória para parecer caótico
         while (areasToDestroy.Count > 0)
         {
             int index = Random.Range(0, areasToDestroy.Count);
@@ -235,5 +241,25 @@ public class BoardView : MonoBehaviour
         }
         
         StartCoroutine(SpawnBoardCoroutine());
+    }
+    
+    public void HandleSpecialAreaTouched(AreaView touchedArea)
+    {
+        if (_specialArea == null || touchedArea != _specialArea) return;
+    
+        // Volta ao estado original
+        Vector3 pos = _specialArea.transform.position;
+        int x = Mathf.RoundToInt(pos.x + (width - 1) / 2f);
+        int y = Mathf.RoundToInt(pos.z + (height - 1) / 2f);
+        int newIndex = (x + y) % 2 == 0 ? 0 : 1;
+        _specialArea.SetTile(newIndex);
+    
+        // Escolher nova área
+        var candidates = new List<AreaView>(_areaViews);
+        candidates.Remove(_specialArea); // evitar mesma área
+        AreaView newSpecial = candidates[Random.Range(0, candidates.Count)];
+        newSpecial.SetTile(2);
+    
+        _specialArea = newSpecial;
     }
 }

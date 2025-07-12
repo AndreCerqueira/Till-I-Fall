@@ -19,7 +19,7 @@ public class AreaView : MonoBehaviour
     }
     
         
-    private void SetTile(int tileIndex)
+    public void SetTile(int tileIndex)
     {
         _material.SetInt("_TileIndex", tileIndex);
     }
@@ -57,6 +57,11 @@ public class AreaView : MonoBehaviour
                         isAnimating = false;
                     });
                 });
+                
+                if (_material.GetInt("_TileIndex") == 2)
+                {
+                    FindObjectOfType<BoardView>().HandleSpecialAreaTouched(this);
+                }
             }
         }
 }

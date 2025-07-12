@@ -46,6 +46,7 @@ Shader "Custom/MapTileUnlit_URP"
             Tags { "LightMode" = "UniversalForward" }
 
             Blend SrcAlpha OneMinusSrcAlpha
+            Cull Off
 
             HLSLPROGRAM
             #pragma vertex vert
